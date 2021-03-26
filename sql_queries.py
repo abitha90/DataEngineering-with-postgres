@@ -68,7 +68,7 @@ songplay_table_insert = ("""INSERT INTO SONGPLAYS
                            location,
                            user_agent) 
                           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                          ON CONFLICT(songplay_id) DO NOTHING
+                          ON CONFLICT(song_id) DO NOTHING
                         """)
 
 user_table_insert = ("""INSERT INTO USERS 
