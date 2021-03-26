@@ -6,6 +6,23 @@ from sql_queries import *
 
 
 def process_song_file(cur, filepath):
+      
+    """
+    Description: This function is responsible for listing the files in a song directory,
+    and then executing the ingest process for each file according to the function
+    that performs the transformation to save it to the database.
+
+    Arguments:
+        cur: the cursor object.
+        conn: connection to the database.
+        filepath: song data file path.
+        func: function that transforms the data and inserts it into the database.
+
+    Returns:
+        None
+ 
+     """
+    
     # open song file
     df = pd.read_json(filepath,typ='series')
 
@@ -14,11 +31,27 @@ def process_song_file(cur, filepath):
     cur.execute(song_table_insert, song_data)
     
     # insert artist record
-    artist_data = df[['artist_id','name','location','lattitude','longitude']]
+    artist_data = df[['artist_id','artist_name','artist_location','artist_latitude','artist_longitude']]
     cur.execute(artist_table_insert, artist_data)
 
 
 def process_log_file(cur, filepath):
+   
+    """
+    Description: This function is responsible for listing the files in a log directory,
+    and then executing the ingest process for each file according to the function
+    that performs the transformation to save it to the database.
+    
+    Arguments:
+        cur: the cursor object.
+        conn: connection to the database.
+        filepath: log data file path.
+        func: function that transforms the data and inserts it into the database.
+
+    Returns:
+        None
+    """
+    
     # open log file
     log_files = get_files(filepath)
     df = pd.read_json(filepath,lines=True)
@@ -31,28 +64,28 @@ def process_log_file(cur, filepath):
     t = df_filtered_records.ts
     
     # insert time data records
-    timestamp1=pd.to_datetime(df['ts'],unit='ms',errors='coerce')
+    timestamp1=pd.to_datetime(df_filtered_records['ts'],unit='ms',errors='coerce')
     timestamp= timestamp1.to_frame()
 
-    month1=pd.to_datetime(df['ts'],unit='ms',errors='coerce').dt.month
+    month1=pd.to_datetime(df_filtered_records['ts'],unit='ms',errors='coerce').dt.month
     month= month1.to_frame()
 
-    year1=pd.to_datetime(df['ts'],unit='ms',errors='coerce').dt.year
+    year1=pd.to_datetime(df_filtered_records['ts'],unit='ms',errors='coerce').dt.year
     year= year1.to_frame()
 
-    hour1=pd.to_datetime(df['ts'],unit='ms',errors='coerce').dt.hour
+    hour1=pd.to_datetime(df_filtered_records['ts'],unit='ms',errors='coerce').dt.hour
     hour= hour1.to_frame()
 
-    day1=pd.to_datetime(df['ts'],unit='ms',errors='coerce').dt.day
+    day1=pd.to_datetime(df_filtered_records['ts'],unit='ms',errors='coerce').dt.day
     day= day1.to_frame()
 
-    weekday1=pd.to_datetime(df['ts'],unit='ms',errors='coerce').dt.weekday_name
+    weekday1=pd.to_datetime(df_filtered_records['ts'],unit='ms',errors='coerce').dt.weekday_name
     weekday= weekday1.to_frame()
 
-    dayofweek1=pd.to_datetime(df['ts'],unit='ms',errors='coerce').dt.dayofweek
+    dayofweek1=pd.to_datetime(df_filtered_records['ts'],unit='ms',errors='coerce').dt.dayofweek
     dayofweek= dayofweek1.to_frame()
 
-    week1=pd.to_datetime(df['ts'],unit='ms',errors='coerce').dt.week
+    week1=pd.to_datetime(df_filtered_records['ts'],unit='ms',errors='coerce').dt.week
     week= week1.to_frame()
     time_df=pd.DataFrame(columns=['timestamp','hour','day','week','month,''year','weekday'])
     time_df= pd.concat([timestamp1,hour1,day1,week1,month1,year1,dayofweek1],axis=1)
@@ -63,7 +96,7 @@ def process_log_file(cur, filepath):
         cur.execute(time_table_insert, list(row))
 
     # load user table
-    user_df = df[['userId','firstName','lastName','gender','level']]
+    user_df = df_filtered_records[['userId','firstName','lastName','gender','level']]
 
     # insert user records
     for i, row in user_df.iterrows():
@@ -74,7 +107,7 @@ def process_log_file(cur, filepath):
             raise de
 
     # insert songplay records
-    for index, row in df.iterrows():
+    for index, row in df_filtered_records.iterrows():
         
         # get songid and artistid from song and artist tables
         cur.execute(song_select, (row.song, row.artist, row.length))
@@ -91,6 +124,21 @@ def process_log_file(cur, filepath):
 
 
 def process_data(cur, conn, filepath, func):
+    
+    """
+    Description: This function is responsible for getting the files from directory and 
+    then executing the ingest process for each file according to the function
+    that performs the transformation to save it to the database.
+    
+    Arguments:
+        cur: the cursor object.
+        conn: connection to the database.
+        filepath: log data file path.
+        func: function that transforms the data and inserts it into the database.
+
+    Returns:
+         None
+    """
     # get all files matching extension from directory
     all_files = []
     for root, dirs, files in os.walk(filepath):
@@ -109,6 +157,20 @@ def process_data(cur, conn, filepath, func):
         print('{}/{} files processed.'.format(i, num_files))
 
 def get_files(filepath):
+    
+    """
+    Description: This function is responsible for getting all the files from directory.
+    
+    Arguments:
+        cur: the cursor object.
+        conn: connection to the database.
+        filepath: log data file path.
+        func: function that transforms the data and inserts it into the database.
+
+    Returns:
+         Song/Log Data Files
+    """
+    
     all_files = []
     for root, dirs, files in os.walk(filepath):
         files = glob.glob(os.path.join(root,'*.json'))
