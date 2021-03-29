@@ -13,8 +13,8 @@ songplay_table_create = (""" CREATE TABLE IF NOT EXISTS songplays
                            start_time timestamp NOT NULL, 
                            user_id integer NOT NULL, 
                            level varchar, 
-                           song_id varchar NOT NULL, 
-                           artist_id varchar NOT NULL, 
+                           song_id varchar, 
+                           artist_id varchar, 
                            session_id varchar, 
                            location varchar, 
                            user_agent varchar
@@ -30,7 +30,7 @@ user_table_create = ("""CREATE TABLE IF NOT EXISTS users
                       )""");
 
 song_table_create = ("""CREATE TABLE IF NOT EXISTS songs 
-                      (song_id varchar PRIMARY KEY NOT NULL, 
+                      (song_id varchar PRIMARY KEY, 
                       title varchar NOT NULL, 
                       artist_id varchar NOT NULL, 
                       year varchar, 
@@ -58,8 +58,7 @@ time_table_create = ("""CREATE TABLE IF NOT EXISTS time
 # INSERT RECORDS
 
 songplay_table_insert = ("""INSERT INTO SONGPLAYS                                                     
-                          (songplay_id,
-                           start_time,
+                          (start_time,
                            user_id,
                            level,
                            song_id,
@@ -67,9 +66,8 @@ songplay_table_insert = ("""INSERT INTO SONGPLAYS
                            session_id,
                            location,
                            user_agent) 
-                          VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                          ON CONFLICT ON CONSTRAINT songplays_pkey DO NOTHING
-                          """)
+                          VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                        """)
 
 user_table_insert = ("""INSERT INTO USERS 
                        (user_id,
